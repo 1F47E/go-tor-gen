@@ -1,4 +1,4 @@
-Generate TOR onion address using regexp like
+Generate TOR onion address using regexp
 
-tor-get ^name 
 // generate onion address that starts with name
+go-tor-gen ^name 

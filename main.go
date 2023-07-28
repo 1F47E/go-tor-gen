@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base32"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"regexp"
@@ -18,12 +17,10 @@ import (
 )
 
 func main() {
-	fmt.Println("vim-go")
-
 	var err error
 
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: ./main <onion address regexp>")
+		fmt.Println("Usage: go-tor-gen <onion address regexp> like ^name")
 		os.Exit(1)
 	}
 	addrRegexp := os.Args[1]
@@ -58,18 +55,16 @@ func main() {
 				publicKey := keyPair.PublicKey()
 				onionAddress := encodePublicKey(publicKey)
 				if re.MatchString(onionAddress) {
-					// save private key
-					privateKeybytes := keyPair.PrivateKey()
-
+					// MATCH!
 					fmt.Printf("Found onion address %d:%s\n", found, onionAddress)
 					fmt.Println("Tries:", cnt)
+					// save private key
+					privateKeybytes := keyPair.PrivateKey()
 					keyFile := fmt.Sprintf("%s/%s", dir, onionAddress)
-
-					err = ioutil.WriteFile(keyFile, []byte(privateKeybytes), 0644)
+					err = os.WriteFile(keyFile, []byte(privateKeybytes), 0644)
 					if err != nil {
 						panic(err)
 					}
-					// break
 					found++
 				}
 				cnt++
@@ -80,7 +75,6 @@ func main() {
 }
 
 func encodePublicKey(publicKey ed25519.PublicKey) string {
-
 	// checksum = H(".onion checksum" || pubkey || version)
 	var checksumBytes bytes.Buffer
 	checksumBytes.Write([]byte(".onion checksum"))
@@ -94,7 +88,5 @@ func encodePublicKey(publicKey ed25519.PublicKey) string {
 	onionAddressBytes.Write([]byte(checksum[:2]))
 	onionAddressBytes.Write([]byte{0x03})
 	onionAddress := base32.StdEncoding.EncodeToString(onionAddressBytes.Bytes())
-
 	return strings.ToLower(onionAddress)
-
 }
