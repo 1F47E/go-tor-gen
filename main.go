@@ -60,11 +60,18 @@ func main() {
 					fmt.Println("Tries:", cnt)
 					// save private key
 					privateKeybytes := keyPair.PrivateKey()
+					fmt.Printf("KeyPair: %+v\n", keyPair)
 					keyFile := fmt.Sprintf("%s/%s", dir, onionAddress)
-					err = os.WriteFile(keyFile, []byte(privateKeybytes), 0644)
+					err = os.WriteFile(keyFile, privateKeybytes, 0644)
 					if err != nil {
 						panic(err)
 					}
+
+					// test
+					// if !validate(keyFile, onionAddress) {
+					// 	panic("validation failed")
+					// }
+
 					found++
 				}
 				cnt++
@@ -89,4 +96,19 @@ func encodePublicKey(publicKey ed25519.PublicKey) string {
 	onionAddressBytes.Write([]byte{0x03})
 	onionAddress := base32.StdEncoding.EncodeToString(onionAddressBytes.Bytes())
 	return strings.ToLower(onionAddress)
+}
+
+func validate(keyFile, onion string) bool {
+
+	keyBytes, err := os.ReadFile(keyFile)
+	if err != nil {
+		panic(err)
+	}
+	// keyPair = ed25519.FromCryptoPrivateKey(keyBytes)
+	key := ed25519.PrivateKey(keyBytes)
+	addr := encodePublicKey(key.PublicKey())
+	if addr != onion {
+		return false
+	}
+	return true
 }
