@@ -1,0 +1,4 @@
+Generate TOR onion address using regexp like
+
+tor-get ^name 
+// generate onion address that starts with name
