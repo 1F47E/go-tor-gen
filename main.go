@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base32"
 	"fmt"
+	"log"
 	"math/rand"
 	"os"
 	"regexp"
@@ -17,7 +18,6 @@ import (
 )
 
 func main() {
-	var err error
 
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: go-tor-gen <onion address regexp> like ^name")
@@ -25,10 +25,19 @@ func main() {
 	}
 	addrRegexp := os.Args[1]
 
-	re, err := regexp.Compile(addrRegexp)
-	if err != nil {
-		panic(err)
+	patterts := strings.Split(addrRegexp, ",")
+	regexList := make([]*regexp.Regexp, len(patterts))
+	for i, p := range patterts {
+		re, err := regexp.Compile(p)
+		if err != nil {
+			continue
+		}
+		regexList[i] = re
 	}
+	if len(regexList) == 0 {
+		log.Fatal("No valid regexp")
+	}
+	fmt.Printf("Got %d regexp\n", len(regexList))
 
 	// create res dir
 	dir := "hostnames"
@@ -54,25 +63,27 @@ func main() {
 				}
 				publicKey := keyPair.PublicKey()
 				onionAddress := encodePublicKey(publicKey)
-				if re.MatchString(onionAddress) {
-					// MATCH!
-					fmt.Printf("Found onion address %d:%s\n", found, onionAddress)
-					fmt.Println("Tries:", cnt)
-					// save private key
-					privateKeybytes := keyPair.PrivateKey()
-					fmt.Printf("KeyPair: %+v\n", keyPair)
-					keyFile := fmt.Sprintf("%s/%s", dir, onionAddress)
-					err = os.WriteFile(keyFile, privateKeybytes, 0644)
-					if err != nil {
-						panic(err)
+				for _, re := range regexList {
+					if re.MatchString(onionAddress) {
+						// MATCH!
+						fmt.Printf("Found onion address %d:%s\n", found, onionAddress)
+						fmt.Println("Tries:", cnt)
+						// save private key
+						privateKeybytes := keyPair.PrivateKey()
+						fmt.Printf("KeyPair: %+v\n", keyPair)
+						keyFile := fmt.Sprintf("%s/%s", dir, onionAddress)
+						err = os.WriteFile(keyFile, privateKeybytes, 0644)
+						if err != nil {
+							panic(err)
+						}
+
+						// test
+						// if !validate(keyFile, onionAddress) {
+						// 	panic("validation failed")
+						// }
+
+						found++
 					}
-
-					// test
-					// if !validate(keyFile, onionAddress) {
-					// 	panic("validation failed")
-					// }
-
-					found++
 				}
 				cnt++
 			}
