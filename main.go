@@ -25,14 +25,14 @@ func main() {
 	}
 	addrRegexp := os.Args[1]
 
-	patterts := strings.Split(addrRegexp, ",")
-	regexList := make([]*regexp.Regexp, len(patterts))
-	for i, p := range patterts {
+	patterns := strings.Split(addrRegexp, ",")
+	regexList := make([]*regexp.Regexp, 0)
+	for _, p := range patterns {
 		re, err := regexp.Compile(p)
 		if err != nil {
 			continue
 		}
-		regexList[i] = re
+		regexList = append(regexList, re)
 	}
 	if len(regexList) == 0 {
 		log.Fatal("No valid regexp")
