@@ -2,6 +2,8 @@ Generate TOR onion address using regexp
 
 // generate onion address that starts with name
 go-tor-gen ^name 
+or multiple names via comma
+go-tor-gen ^name1,^name2 
 
 
 
